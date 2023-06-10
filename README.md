@@ -1,4 +1,5 @@
 # SubgraphX Reproducibility
+**[Paper MLRC22](https://openreview.net/forum?id=zKBJw4Ht8s)** | **[Kaggle Notebook](https://www.kaggle.com/code/yannikmahlau/subgraphx/notebook)** 
 
 Reproducing results from the [SubgraphX](http://proceedings.mlr.press/v139/yuan21c.html) paper including a full re-implementation of the SubgraphX algorithm in PyTorch-Geometric.
 
