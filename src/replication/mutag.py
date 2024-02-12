@@ -11,7 +11,8 @@ from torch import optim
 from torch.nn import ReLU, Linear, Softmax, Sigmoid, Dropout
 from torch_geometric.data import Data
 from torch_geometric.loader import DataLoader
-from torch_geometric.nn import Sequential, GCNConv, GINConv, global_mean_pool, global_max_pool, GNNExplainer
+from torch_geometric.nn import Sequential, GCNConv, GINConv, global_mean_pool, global_max_pool
+from torch_geometric.explain import GNNExplainer, Explainer
 from torch_geometric.utils import to_networkx
 
 from src.algorithm.subgraph_x import SubgraphX
@@ -226,7 +227,18 @@ def collect_gnn_expl(model, graph_list, gnnexp_epochs, path):
         save_data(path, res_dict)
 
     # collect explanations for all nodes with a fixed n_min
-    explainer = GNNExplainer(model, epochs=gnnexp_epochs, return_type='prob')
+    explainer = Explainer(
+        model=model,
+        algorithm=GNNExplainer(epochs=gnnexp_epochs),
+        explanation_type='model',
+        node_mask_type='attributes',
+        edge_mask_type='object',
+        model_config=dict(
+            mode='multiclass_classification',
+            task_level='node',
+            return_type='probs',
+        ),
+    )
 
     counter = 1
     for g in test_graph_idx:
@@ -234,7 +246,11 @@ def collect_gnn_expl(model, graph_list, gnnexp_epochs, path):
         graph = graph_list[g]
         print(graph.x.shape)
         start_time = time.time()
-        node_feat_mask, edge_mask = explainer.explain_graph(graph.x.to(device), graph.edge_index.to(device))
+        explanation = explainer(
+            x=graph.x.to(device),
+            edge_index=graph.edge_index.to(device),
+        )
+        node_feat_mask, edge_mask = explanation.node_mask, explanation.edge_mask
 
         end_time = time.time()
         duration = end_time - start_time
